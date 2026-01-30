@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: btc-api
+  namespace: bitcoin-tracker
+  labels:
+    app: btc-api
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: btc-api
+  template:
+    metadata:
+      labels:
+        app: btc-api
+        tier: backend
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/rishabhpr/btc-price-api:latest
+        # For local development, use:
+        # image: btc-price-api:local
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: btc-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: btc-api
+  namespace: bitcoin-tracker
+spec:
+  selector:
+    app: btc-api
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP

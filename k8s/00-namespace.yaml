@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bitcoin-tracker
+  labels:
+    app: bitcoin-tracker
+    environment: demo

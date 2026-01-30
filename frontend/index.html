@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>₿ Bitcoin Tracker | Kubernetes Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #f7931a, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(247, 147, 26, 0.2);
+        }
+        
+        .card-title {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #f7931a;
+        }
+        
+        .change {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .change.positive {
+            color: #00d395;
+        }
+        
+        .change.negative {
+            color: #ff4757;
+        }
+        
+        .currencies {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .currency {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .currency-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .currency-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 5px;
+        }
+        
+        .sentiment-meter {
+            height: 20px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .sentiment-indicator {
+            position: absolute;
+            width: 10px;
+            height: 30px;
+            background: #fff;
+            border-radius: 5px;
+            top: -5px;
+            transition: left 0.5s;
+        }
+        
+        .sentiment-label {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .wisdom-card {
+            background: linear-gradient(135deg, #f7931a 0%, #e67e22 100%);
+            color: #000;
+        }
+        
+        .wisdom-text {
+            font-size: 1.3rem;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .wisdom-source {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .k8s-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(50, 108, 229, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d395;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #f7931a;
+            text-decoration: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">₿</div>
+            <h1>Bitcoin Tracker</h1>
+            <p class="subtitle">Real-time price tracking powered by Kubernetes</p>
+            <div class="k8s-badge">
+                <span>☸️</span>
+                <span>Running on Kubernetes</span>
+            </div>
+        </header>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Current Price</div>
+                <div class="price" id="price">$--,---</div>
+                <div class="change" id="change">--.--% (24h)</div>
+                <div class="currencies">
+                    <div class="currency">
+                        <div class="currency-label">EUR</div>
+                        <div class="currency-value" id="eur">€--,---</div>
+                    </div>
+                    <div class="currency">
+                        <div class="currency-label">GBP</div>
+                        <div class="currency-value" id="gbp">£--,---</div>
+                    </div>
+                </div>
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span id="cache-status">Loading...</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Market Sentiment</div>
+                <div class="sentiment-meter">
+                    <div class="sentiment-indicator" id="sentiment-indicator"></div>
+                </div>
+                <div class="sentiment-label" id="sentiment">Loading...</div>
+                <p style="color: #888; margin-top: 15px; font-size: 0.9rem;">
+                    Fear & Greed Index: <span id="sentiment-index">--</span>/100
+                </p>
+            </div>
+            
+            <div class="card wisdom-card">
+                <div class="card-title" style="color: rgba(0,0,0,0.6);">Saylor's Wisdom</div>
+                <div class="wisdom-text" id="wisdom">Loading wisdom...</div>
+                <div class="wisdom-source" id="wisdom-source"></div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>Built with ❤️ and ₿itcoin by <a href="https://github.com/rishabhpr">Rishabh</a></p>
+            <p style="margin-top: 10px;">
+                Kubernetes Demo • API + Redis + Frontend
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : '/api';
+        
+        function formatPrice(price, currency = '$') {
+            return currency + price.toLocaleString('en-US', { 
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0 
+            });
+        }
+        
+        async function fetchPrice() {
+            try {
+                const response = await fetch(`${API_URL}/api/price`);
+                const data = await response.json();
+                
+                document.getElementById('price').textContent = formatPrice(data.usd);
+                document.getElementById('eur').textContent = formatPrice(data.eur, '€');
+                document.getElementById('gbp').textContent = formatPrice(data.gbp, '£');
+                
+                const changeEl = document.getElementById('change');
+                const change = data.change_24h.toFixed(2);
+                changeEl.textContent = `${change > 0 ? '+' : ''}${change}% (24h)`;
+                changeEl.className = `change ${change >= 0 ? 'positive' : 'negative'}`;
+                
+                document.getElementById('cache-status').textContent = 
+                    data.cached ? 'From Redis cache' : 'Fresh from API';
+            } catch (error) {
+                console.error('Error fetching price:', error);
+            }
+        }
+        
+        async function fetchSentiment() {
+            try {
+                const response = await fetch(`${API_URL}/api/sentiment`);
+                const data = await response.json();
+                
+                document.getElementById('sentiment').textContent = data.sentiment;
+                document.getElementById('sentiment-index').textContent = data.index;
+                document.getElementById('sentiment-indicator').style.left = `${data.index}%`;
+            } catch (error) {
+                console.error('Error fetching sentiment:', error);
+            }
+        }
+        
+        async function fetchWisdom() {
+            try {
+                const response = await fetch(`${API_URL}/api/wisdom`);
+                const data = await response.json();
+                
+                document.getElementById('wisdom').textContent = `"${data.rule}"`;
+                document.getElementById('wisdom-source').textContent = `— ${data.source}`;
+            } catch (error) {
+                console.error('Error fetching wisdom:', error);
+            }
+        }
+        
+        // Initial load
+        fetchPrice();
+        fetchSentiment();
+        fetchWisdom();
+        
+        // Refresh data periodically
+        setInterval(fetchPrice, 30000); // Every 30 seconds
+        setInterval(fetchSentiment, 60000); // Every minute
+        setInterval(fetchWisdom, 120000); // Every 2 minutes
+    </script>
+</body>
+</html>
